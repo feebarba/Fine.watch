@@ -1,0 +1,27 @@
+:root {
+  --paper: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+main {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--paper);
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  display: block;
+  cursor: default;
+}
