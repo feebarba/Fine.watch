@@ -13,6 +13,7 @@ main {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  touch-action: pan-y;
 }
 
 body {
@@ -24,4 +25,5 @@ canvas {
   inset: 0;
   display: block;
   cursor: default;
+  touch-action: pan-y !important;
 }

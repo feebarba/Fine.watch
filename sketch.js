@@ -7,6 +7,9 @@ let numberBodies = [];
 let numberSize = 0;
 let lastPointerX = 0;
 let lastPointerY = 0;
+let activeTouchPoint = null;
+let touchReleaseTimer = null;
+let touchInputDetected = false;
 let bigHandPath;
 let smallHandPath;
 
@@ -113,7 +116,8 @@ const lunarPhysics = {
 };
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  const canvas = createCanvas(windowWidth, windowHeight);
+  setupTouchInteraction(canvas.elt);
   bigHandPath = new Path2D(bigHandPathData);
   smallHandPath = new Path2D(smallHandPathData);
   for (const definition of Object.values(numberVectorDefinitions)) {
@@ -450,7 +454,56 @@ function getDisplayTime() {
   };
 }
 
+function setupTouchInteraction(canvas) {
+  const readTouchPoint = (event) => {
+    const touch = event.touches[0] || event.changedTouches[0];
+    if (!touch) return null;
+
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      x: ((touch.clientX - bounds.left) / Math.max(bounds.width, 1)) * width,
+      y: ((touch.clientY - bounds.top) / Math.max(bounds.height, 1)) * height,
+    };
+  };
+
+  const updateTouchPoint = (event) => {
+    const point = readTouchPoint(event);
+    if (!point) return;
+
+    const isFirstTouchFrame = activeTouchPoint === null;
+    activeTouchPoint = point;
+    touchInputDetected = true;
+
+    if (isFirstTouchFrame) {
+      lastPointerX = point.x;
+      lastPointerY = point.y;
+    }
+
+    if (touchReleaseTimer !== null) {
+      window.clearTimeout(touchReleaseTimer);
+      touchReleaseTimer = null;
+    }
+  };
+
+  const releaseTouchPoint = (event) => {
+    updateTouchPoint(event);
+    touchReleaseTimer = window.setTimeout(() => {
+      activeTouchPoint = null;
+      touchReleaseTimer = null;
+    }, 100);
+  };
+
+  const listenerOptions = { passive: true, capture: true };
+  canvas.addEventListener('touchstart', updateTouchPoint, listenerOptions);
+  canvas.addEventListener('touchmove', updateTouchPoint, listenerOptions);
+  canvas.addEventListener('touchend', releaseTouchPoint, listenerOptions);
+  canvas.addEventListener('touchcancel', releaseTouchPoint, listenerOptions);
+}
+
 function pointerPosition() {
+  if (activeTouchPoint) return activeTouchPoint;
+  if (touchInputDetected) return { x: -1, y: -1 };
+
   return { x: mouseX, y: mouseY };
 }
 
